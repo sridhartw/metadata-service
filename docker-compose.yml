@@ -1,0 +1,30 @@
+version: "3.6"
+services:
+  db:
+    image: "mongo:3.4-xenial"
+    container_name: "mongo_db"
+    ports:
+      - "27017:27017"
+    volumes:
+      - /tmp/metadata-service/mongodb/data:/data/db
+    healthcheck:
+      test: "echo 'db.runCommand(\"ping\").ok' | mongo localhost:27017/metadata --quiet"
+      interval: 30s
+      timeout: 5s
+      retries: 0
+
+  api:
+    build:
+      context: .
+      args:
+        PORT: 8080
+        MONGOLAB_URI: mongodb://db:27017/metadata
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: "curl -f localhost:8080/metadata"
+      interval: 30s
+      timeout: 5s
+      retries: 0
